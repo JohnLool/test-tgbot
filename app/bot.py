@@ -1,6 +1,7 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, CallbackQueryHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultPhoto
+from telegram.ext import Application, CommandHandler, MessageHandler, InlineQueryHandler, filters, CallbackContext, CallbackQueryHandler
 import requests
+from uuid import uuid4
 
 # Импорт токена из config.py
 from config import TELEGRAM_TOKEN
@@ -36,6 +37,30 @@ async def start(update: Update, context: CallbackContext) -> None:
     ])
 
     await update.message.reply_text('Выберите опцию:', reply_markup=keyboard)
+
+
+async def inline_query(update: Update, context: CallbackContext) -> None:
+    query = update.inline_query.query
+
+    if not query:
+        return
+
+    results = [
+        InlineQueryResultPhoto(
+            id=str(uuid4()),
+            title="кошечька!!",
+            photo_url=get_url('https://api.thecatapi.com/v1/images/search'),
+            thumbnail_url='https://api.thedogapi.com/v1/images/search'
+        ),
+        InlineQueryResultPhoto(
+            id=str(uuid4()),
+            title="сабачька!!",
+            photo_url=get_url('https://api.thedogapi.com/v1/images/search'),
+            thumbnail_url='https://api.thedogapi.com/v1/images/search'
+        ),
+    ]
+
+    await update.inline_query.answer(results)
 
 
 async def button_click(update: Update, context: CallbackContext) -> None:
@@ -75,6 +100,9 @@ def main():
 
     # Обработчик нажатия кнопок в inline keyboard
     application.add_handler(CallbackQueryHandler(button_click))
+
+    # Обработчик inline-запросов
+    application.add_handler(InlineQueryHandler(inline_query))
 
     application.run_polling()
 
